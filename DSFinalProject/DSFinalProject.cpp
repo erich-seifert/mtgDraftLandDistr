@@ -79,9 +79,6 @@ DS final project proposal
 
 */
 
-// DSFinalProject.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <iostream>
 #include <stack>
 #include <vector>
@@ -90,8 +87,14 @@ DS final project proposal
 #include <chrono>       // for chrono::system_clock
 #include <fstream>      // for file streams
 #include <string>
+#include <cstdlib> // for rand()
 
 using namespace std;
+
+
+// I RAELIZE NOW THE DECK SHOULD BE A VECTOR UNTIL YOUR READY TO ACTUALLY PLAY WITH IT
+// VECTOR/ARRAY MAKE IT MUCH EASIER TO LOOK AT STATS ABOUT IT
+// when you actually intialize a game you solidify the deck into a stack (then shuffle it)
 
 struct Manacost {
     int white = 0;
@@ -99,7 +102,12 @@ struct Manacost {
     int black = 0;
     int red = 0;
     int green = 0;
+    int colorless = 0;
 };
+
+
+//Manacost totalCostDeck(stack<Card>&deck);
+
 class Card {
 public:
     string getName() const
@@ -110,6 +118,15 @@ public:
     {
         return cost;
     }
+    int getValue() const
+    {
+        return cost.white +
+            cost.blue +
+            cost.black +
+            cost.red +
+            cost.green +
+            cost.colorless;
+    }
 
     void input(ifstream& inStream)
     {
@@ -117,7 +134,9 @@ public:
         string inName = "";
         Manacost inCost;
         int firstParnth = 0;
-        int lastParnth = 0;
+        int colorless;
+
+        char c;
 
         getline(inStream, line);
 
@@ -125,34 +144,40 @@ public:
         // find the values between ( and ) 
         for (int i = 0; i < line.length(); i++)
         {
-            if (line[i] == '(')
+            c = line[i];
+
+            if (c == '(' || c == ')')
                 firstParnth = i;
-            else if (line[i] == ')')
-                lastParnth = i;
-            // we are still reading the name
-            else if (firstParnth <= i)
-                inName[i] = line[i];
-            // we must be between the paranthesis 
-            else
-            {
-                switch (line[i])
+            else if (firstParnth > 0)
+                switch (c)
                 {
                 case 'W':
-                    cost.white += 1;
+                    inCost.white++;
                     break;
                 case 'U':
-                    cost.blue += 1;
+                    inCost.blue++;
+                    break;
                 case 'B':
-                    cost.black += 1;
+                    inCost.black++;
+                    break;
                 case 'R':
-                    cost.red += 1;
+                    inCost.red++;
+                    break;
                 case 'G':
-                    cost.green += 1;
+                    inCost.green++;
+                    break;
+                default:
+                    // need to static cast the char to the mana value 
+                    // https://www.asciitable.com/
+                    // so interesting, but subtracting by 0 shifts
+                    // the values to corresponding int value
+                    // so '1' would be 49, minus '0' which is 48 = 1
+                    // it will work only if values are 0-9 which works for mtg 
+                    inCost.colorless += static_cast<int>(c - '0');;
                 }
-
-            }
+            else 
+                inName.append(1, c);       
         }
-
         name = inName;
         cost = inCost;
 
@@ -164,75 +189,110 @@ private:
 
 class Deck {
 public:
-    void add(const Card& card) 
+    Deck(int inDeckSize)
     {
-        deck.push(card);
+        deckSize = inDeckSize;
+
+        deck = new Card[deckSize];
+
+        for (int i = 0; i < deckSize; i++)
+            deck[i] = Card();
     }
-    int size() const 
+
+    Deck(const Deck& otherDeck)
     {
-        return deck.size();
+        deckSize = otherDeck.deckSize;
+
+        for (int i = 0; i < deckSize; i++)
+            deck[i] = otherDeck.deck[i];
     }
-    bool empty() const 
+    ~Deck()
     {
-        return deck.empty();
+        delete[] deck;
+        deck = NULL;
+        deckSize = 0;
     }
-    Card draw()
+
+    Deck& operator =(const Deck& otherDeck)
     {
-        if (deck.empty())
+        if (this != &otherDeck)
+        {
+            delete[] deck;
+        }
+
+        deckSize = otherDeck.deckSize;
+
+        deck = new Card[deckSize];
+
+        for (int i = 0; i < deckSize; i++)
+            deck[i] = otherDeck.deck[i];
+    }
+
+    Card operator[](const int pos) const 
+    {
+        if (pos >= deckSize || pos < 0)
             return Card();
-
-        Card topCard = deck.top();
-        deck.pop();
-        return topCard;
+        else
+            return deck[pos];
     }
-
     void input(ifstream& inStream)
     {
         // can assume deck size will be 23 :)
-        int deckSize = 23;
         Card card;
         for (int i = 0; i < deckSize; i++)
         {
             card.input(inStream);
-            deck.push(card);
+            deck[i] = card;
         }
     }
-
     void shuffle()
     {
-        // in order to leverage shuffle 
-        // we need to dump into a vector 
-        vector<Card> deckVec;
-        while (!deck.empty())
-        {
-            deckVec.push_back(deck.top());
-            // remove all cards from the stack 
-            // so we put back on empty 
-            deck.pop();
-        }
         // shuffle has been figured out (standin onthe shoudlers of giants)
         // https://cplusplus.com/reference/algorithm/shuffle/?kw=shuffle
         unsigned seed = chrono::system_clock::now().time_since_epoch().count();
-        std::shuffle(deckVec.begin(), deckVec.end(), default_random_engine(seed));
+        std::shuffle(deck, deck + deckSize, default_random_engine(seed));
+    }
 
-        // iterate through deck and put back into stack 
-        for (vector<Card>::const_iterator i = deckVec.begin();
-            i != deckVec.end(); i++
-            )
+    void cut()
+    {
+        // pick a random point in the deck say 10
+        // if that is within the bounds of the deck
+        // make a new arary taking 10 -> end of array
+        // and put begin of array -> 9 after it
+        srand((unsigned int)time(NULL));
+
+        int deckSizeArr = deckSize - 1;
+        int cutPos = rand() % (deckSizeArr);
+
+        cout << cutPos << endl;
+
+        Card * newDeck = new Card[deckSize];
+
+        for (int i = 0; i < deckSize; i++)
         {
-            deck.push(*i);
+            // cycle through the decks
+            // create a new deck shifting the position
+            // if the deck would overlap leverage mod
+            newDeck[i] = deck[ ((i + cutPos > deckSizeArr) ? 
+                                (i + cutPos) % deckSizeArr - 1 
+                                : i + cutPos)];
         }
+        // leverage assignment operator 
+        deck = newDeck;
+        delete[] newDeck;
+        newDeck = NULL;
 
     }
 private:
-    stack<Card> deck;
+    Card* deck;
+    int deckSize;
 };
 
 
 
 int main()
 {
-    Deck d;
+    Deck d(23);
 
     // reading from file 
     // stolen from 12/19/2024 
@@ -250,14 +310,43 @@ int main()
         d.input(deckInFile);
         deckInFile.close();
         cout << "\Deck read from file:" << endl;
-    }
+    }   
 
-    cout << d.size();
 
-    Card c;
-    c = d.draw();
-    cout << c.getName();
 
+    cout << d[0].getName() << endl;
+    // d.shuffle();
+
+    d.cut();
+
+    cout << d[0].getName();
+
+    //d.shuffle();
+
+    //Card c;
+    //c = d.draw();
+    //cout << "|" << c.getName() << "|" << endl;
+
+    //Manacost m;
+    //m = c.getCost();
+
+    //cout << "white: " << m.white << endl;
+    //cout << "blue: " << m.blue << endl;
+    //cout << "black: " << m.black << endl;
+    //cout << "red: " << m.red << endl;
+    //cout << "green: " << m.green << endl;
+    //cout << "colorless: " << m.colorless << endl;
+
+    
 
 }
 
+//
+//Manacost totalCostDeck(stack<Card>& deck)
+//{
+//    vector<Card> deckVec;
+//    while (!deck.empty())
+//    {
+//        deckVec.push_back(deck.draw());
+//    }
+//}
