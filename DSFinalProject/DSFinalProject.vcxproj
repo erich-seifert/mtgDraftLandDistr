@@ -127,7 +127,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DSFinalProject.cpp" />
+    <ClCompile Include="card.cpp" />
+    <ClCompile Include="deck.cpp" />
+    <ClCompile Include="hand.cpp" />
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="card.h" />
+    <ClInclude Include="deck.h" />
+    <ClInclude Include="hand.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
+    <Text Include="readmefinal.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
