@@ -10,7 +10,7 @@ DS final project proposal
 * Identify a class you will write to store data critical to the application.
     - The Class would be a distinct card, its name, mana cost/value
     - A Deck contains cards and is a template function
-    - a Hand contains cards and must be sorted 
+    - a Hand is a linked list of cards and can be sorted
 
 * What will be stored in a dynamic array?  A linked List?
     - Dynamic array = Original Deck
@@ -24,6 +24,7 @@ DS final project proposal
     - I want to find the largest mana value of card in my deck 
 * What will you sort (put in order)?
     - After you draw your hand from the deck sort it 
+    - insertion sort, only 7 cards in a hand!
 * How will you use an STL container class?  An STL function?
     - Leveraging Stack, push and pop 
 

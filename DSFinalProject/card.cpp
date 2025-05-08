@@ -33,12 +33,15 @@ Manacost Card::getCost() const
 
 int Card::getValue() const
 {
-    return cost.white +
+    // if its a land return 0 mana value
+    // else sum the total cost 
+    return (cost.isLand) ? 0 : (
+    cost.white +
     cost.blue +
     cost.black +
     cost.red +
     cost.green +
-    cost.colorless;
+    cost.colorless);
 }
 // input stolen from class 
 void Card::input(ifstream& inStream)

@@ -45,9 +45,12 @@ public:
 
 	void clear();
 
+	// sorts the linked list via insertion sort 
+	void sort();
+
 	// Accessor and Mutator 
 	// removes card from hand and returns it
-	Card play();
+	//Card play();
 
 private:
 	Node* firstP;  // point to first node (head) of linked list

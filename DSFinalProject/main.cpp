@@ -1,7 +1,8 @@
 #include <iostream>
-#include <vector>
+#include <stack>
 #include <string>
-#include "deck.cpp"
+#include "deck.cpp" // template 
+#include "hand.h"
 using namespace std;
 
 // specific to magic cards 
@@ -12,6 +13,13 @@ Manacost totalCostDeck(Deck<Card>& deck);
 // and a amount of lands
 // figure out the distribution of lands that mirrors cost 
 Manacost optimalLandDistribution(int landCount, const Manacost& totalCost);
+
+// function to convert Deck into stack 
+stack<Card> createPlayDeck(const Deck<Card> &inDeck );
+
+// draw a card from a deck stack | top - pop
+Card draw(stack<Card> &inDeck);
+Hand drawHand(stack<Card>& inDeck, int handSize);
 
 int main()
 {
@@ -38,22 +46,12 @@ int main()
     {
         spellDeck.input(deckInFile);
         deckInFile.close();
-        cout << "Deck read from file:" << endl;
+        cout << "Deck read from file: " << inputFilename << endl;
     }   
 
     Manacost totalManaSym;
     totalManaSym = totalCostDeck(spellDeck);
-
-    cout << "optimal land distribution: " << endl; 
-
     Manacost landDistr = optimalLandDistribution(landCount, totalManaSym);
-
-    cout << "white: " << landDistr.white << endl;
-    cout << "blue: " << landDistr.blue << endl;
-    cout << "black: " << landDistr.black << endl;
-    cout << "red: " << landDistr.red << endl;
-    cout << "green: " << landDistr.green << endl;
-    cout << "colorless: " << landDistr.colorless << endl;
 
     // build land deck with cards
     Card plains("Plains", (Manacost{1, 0, 0, 0, 0, 0, true }));
@@ -92,18 +90,25 @@ int main()
     for (int i = 0; i < landCount; i++)
         fullDeck[i + spellCount] = landDeck[i];
 
-    cout << fullDeck[0].getName();
-    cout << " | " << fullDeck[0].getValue() << endl;
     // shuffle 
     fullDeck.shuffle();
 
-    cout << fullDeck[0].getName();
-    cout << " | " << fullDeck[0].getValue() << endl;
-
-
     // put deck into stack
+    stack<Card> playDeck = createPlayDeck(fullDeck); 
 
     // draw cards from stack into hand 
+    Hand playHand = drawHand(playDeck, 7);
+
+    cout << "Hand Presort" << endl;
+
+    playHand.output();
+
+    playHand.sort();
+
+    cout << "Hand Postsort" << endl;
+
+    playHand.output();
+
 
     // sort hand 
 
@@ -212,3 +217,31 @@ Manacost optimalLandDistribution(int landCount, const Manacost& totalCost)
     }
     return landDist;
 }
+
+stack<Card> createPlayDeck(const Deck<Card>& inDeck)
+{
+    stack<Card> playDeck;
+    for (int i = 0; i < inDeck.size(); i++)
+    {
+        playDeck.push(inDeck[i]);
+    }
+    return playDeck;
+}
+
+Card draw(stack<Card>& inDeck)
+{
+    if (inDeck.empty())
+        return Card();
+    Card topCard = inDeck.top();
+    inDeck.pop();
+    return topCard;
+}
+Hand drawHand(stack<Card>& inDeck, int handSize)
+{
+    Hand hand;
+    for (int i = 0; i < handSize; i++)
+        hand.add(draw(inDeck));
+
+    return hand;
+}
+

@@ -78,18 +78,19 @@ Card Hand::get(int i) const
 		count++;
 	}
 
-	cerr << "Invalid history index: " << i << endl;
+	cerr << "Invalid Hand index: " << i << endl;
 	return Card();
 }
 
 void Hand::output() const
 {
-	cout << "History:";
+	cout << "Hand:" << endl;
 
 	for (Node* traverseP = firstP;
 		traverseP != NULL;
 		traverseP = traverseP->linkP)
-		cout << " " << traverseP->info.getName();
+		cout << traverseP->info.getName() << " ("
+		<< traverseP->info.getValue() << ")" << endl;
 }
 
 // Mutators
@@ -117,6 +118,66 @@ void Hand::clear()
 		firstP = nextP;
 	}
 }
+
+void Hand::sort()
+{
+	Node* sortedP = nullptr; // new head 
+
+	while (firstP != nullptr)
+	{
+		Node* currP = firstP;
+		firstP = firstP->linkP;
+
+		if (!sortedP || currP->info.getValue() < sortedP->info.getValue())
+		{
+			currP->linkP = sortedP;
+			sortedP = currP;
+		}
+		else
+		{
+			Node* s = sortedP;
+			while (s->linkP && s->linkP->info.getValue() < currP->info.getValue())
+			{
+				s = s->linkP;
+			}
+			currP->linkP = s->linkP;
+			s->linkP = currP;
+		}
+	}
+
+	firstP = sortedP;
+}
+
+// Function to sort the linked list using selection sort
+// https://www.geeksforgeeks.org/iterative-selection-sort-for-linked-list/
+Node* selectionSort(Node* head) {
+
+	// Traverse through the entire list
+	for (Node* start = head; start != nullptr;
+		start = start->linkP) {
+
+		// Assume the current start node is the minimum
+		Node* min_node = start;
+
+		// Find the node with the minimum data in the
+		// remaining unsorted part of the list
+		for (Node* curr = start->linkP; curr != nullptr;
+			curr = curr->linkP) {
+			if (curr->info.getValue() < min_node->info.getValue()) {
+				min_node = curr;
+			}
+		}
+
+		// Swap the data of start node and min_node
+		if (min_node != start) {
+			Card node = start->info;
+			start->info = min_node->info;
+			min_node->info = node;
+		}
+	}
+	return head;
+}
+
 
 // Add all items from other history
 void Hand::append(const Hand& otherHand)
